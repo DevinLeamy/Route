@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--
+   Goal #1: Create a website with a single button that,
+   when clicked, will draw a line on the screen.
+   [Accomplished]
+   Goal #2: Create a wesite with two buttons and two text fields. The text fields will be named
+   start and end. In each text field the user will enter a coordinate location. There will also be start and
+   end buttons. The start button will draw the shortest path from the start to the end to the screen.
+   The end button will clear the screen.
+   [Accomplished]
+   Goal #3: Change the canvas into a kind of visitedTile and allow the user to select square in the visitedTile. They will be
+   able to select the starting point, the ending point and put barriers up. This change also means that the start
+   end buttons are going to have a slightly different function. The start button won't change much, when you click
+   it it will find the path and the end button will not clear the visitedTile rather than the canvas.
+   [Accomplished]
+   Goal #3: After selecting two points and putting up barriers, if a path is found between the two points then the a "some colored"
+   line be displayed from the start to the end showing the shortest path between the points. Also, show the length of the path.
+   [Accomplished]
+   Goal #4: Allow the user to create barriers by holding down click
+-->
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <!-- <script type="text/javascript" src="algorithms.js"></script> -->
+      <!-- <link rel="stylesheet" href="style.css"> -->
+      <title></title>
+   </head>
+   <body>
+      <div class="intro">
+         <h1>The ultimate path finding website</h1>
+      </div>
+      <div class="funPart">
+         <button type="button" name="start" onClick="breadthFirstSearch()">Find a path!</button>
+         <button type="button" name="end" onClick="erasePath()">Start anew</button>
+         <button type="button" name="makeGridButton" onClick="makeGrid()">Make a grid</button>
+         <canvas id="myCanvas" width="1200" height="800" onClick="selectSquareEvent()"></canvas>
+      </div>
+      <script>
+         var canvas = document.getElementById("myCanvas");
+         var context = canvas.getContext("2d");
+         var TILE_HEIGHT = 20;
+         var TILE_WIDTH = 20;
+         var NUM_ROWS = 40;
+         var NUM_COLS = 60;
+         var START_COLOR = "green";
+         var END_COLOR = "red";
+         var PATH_COLOR = "blue";
+         var WALL_COLOR = "orange";
+         var SHORTEST_PATH_COLOR = "pink";
+         var pickedStart = false;
+         var pickedEnd = false;
+         var startRow = 0;
+         var startCol = 0;
+         var endRow = 0;
+         var endCol = 0;
+         var visitedTile = new Array();
+         var distanceFromStart = new Array();
+         for (var i = 0; i < NUM_ROWS; i++) {
+            visitedTile.push(new Array(NUM_COLS));
+            distanceFromStart.push(new Array(NUM_COLS));
+            for (var j = 0; j < NUM_COLS; j++) {
+               visitedTile[i][j] = false;
+               distanceFromStart[i][j] = (NUM_COLS * NUM_ROWS) + 1;
+            }
+         }
+         function makeGrid() {
+            for (var i = 0; i < NUM_ROWS; i++) {
+               for (var j = 0; j < NUM_COLS; j++) {
+                  context.beginPath();
+                  context.lineWidth = "2";
+                  context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                  context.stroke();
+               }
+            }
+         }
+         function breadthFirstSearch() {
+            if (!pickedStart || !pickedEnd) {return;}
+            //Breath First Search Below
+            var currentCoords = new Array();
+            var found = false;
+            currentCoords.push(new Array(startRow, startCol)); // This should be new Array(startRow, startCol)
+            if (startRow == endRow && startCol == endCol) {found = true;}
+            var currentDistance = 1;
+            while (!found && currentCoords.length > 0) {
+               var newCoords = new Array();
+               for (var i = 0; i < currentCoords.length; i++) {
+                  var row = currentCoords[i][0];
+                  var col = currentCoords[i][1];
+                  if (colorIfValid(row+1, col, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  if (colorIfValid(row-1, col, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  if (colorIfValid(row, col+1, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  if (colorIfValid(row, col-1, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+               }
+               currentCoords = Array.from(newCoords);
+               currentDistance++;
+            }
+            if (found) {
+               colorShortestPath();
+            }
+         }
+         function erasePath() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < NUM_ROWS; i++) {
+               for (var j = 0; j < NUM_COLS; j++) {
+                  visitedTile[i][j] = false;
+                  distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
+               }
+            }
+            makeGrid();
+            pickedStart = false;
+            pickedEnd = false;
+            startRow = 0;
+            startCol = 0;
+            endRow = 0;
+            endCol = 0;
+         }
+         function colorBox(row, col, color) {
+            context.beginPath();
+            context.lineWidth = "2";
+            context.fillStyle = color;
+            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.stroke();
+            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+         }
+         function colorIfValid(row, col, color, newCoords, currentDistance) {
+            if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0 && !visitedTile[row][col]) {
+               newCoords.push(new Array(row, col));
+               visitedTile[row][col] = true;
+               distanceFromStart[row][col] = currentDistance;
+               if (row == endRow && col == endCol) {return true;}
+               colorBox(row, col, color);
+            }
+            return false;
+         }
+         function selectSquareEvent() {
+            var col = Math.floor((event.clientX - 260) / TILE_WIDTH);
+            var row = Math.floor((event.clientY - 80) / TILE_HEIGHT);
+            //Future feature: If you pick a square that has already been picked it changes the color
+            //of the type of square Types: start, end, wall, paths and path
+            //Future feature: Hold down click to create walls
+            if (!pickedStart) {
+               pickedStart = true;
+               startRow = row;
+               startCol = col;
+               colorBox(row, col, START_COLOR);
+               visitedTile[row][col] = true;
+               distanceFromStart[row][col] = 0;
+            } else if (!pickedEnd) {
+               pickedEnd = true;
+               endRow = row;
+               endCol = col;
+               colorBox(row, col, END_COLOR);
+            } else {
+               if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
+               colorBox(row, col, WALL_COLOR);
+               visitedTile[row][col] = true;
+            }
+         }
+         function colorShortestPath() {
+            // alert("Found the shortest path, it is of length: " + distanceFromStart[endRow][endCol]);
+            // break;
+            var currentRow = endRow;
+            var currentCol = endCol;
+            var currentDistance = distanceFromStart[endRow][endCol];
+            while (currentDistance > 1) {
+               if (tryTile(currentRow+1, currentCol)) {currentDistance--; currentRow++;continue;}
+               if (tryTile(currentRow-1, currentCol)) {currentDistance--; currentRow--;continue;}
+               if (tryTile(currentRow, currentCol+1)) {currentDistance--; currentCol++;continue;}
+               if (tryTile(currentRow, currentCol-1)) {currentDistance--; currentCol--;continue;}
+            }
+            function tryTile(row, col) {
+               if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0) {
+                  if (distanceFromStart[row][col] == currentDistance-1) {
+                     colorBox(row, col, SHORTEST_PATH_COLOR);
+                     return true;
+                  }
+               }
+               return false;
+            }
+         }
+      </script>
+   </body>
+</html>
