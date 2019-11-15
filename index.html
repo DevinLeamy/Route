@@ -16,7 +16,15 @@
    Goal #3: After selecting two points and putting up barriers, if a path is found between the two points then the a "some colored"
    line be displayed from the start to the end showing the shortest path between the points. Also, show the length of the path.
    [Accomplished]
-   Goal #4: Allow the user to create barriers by holding down click
+   Goal #4: Allow the user to create barriers by holding down click.
+   [Accomplished]
+   Goal #5: Allow the user to delete barriers when holding right click. Add A* search and allow the users to choose between BFS and A*
+   with a combo box. Also, slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
+-->
+<!--
+   Future Features:
+   -If you pick a square that has already been picked it changes the color
+   of the type of square Types: start, end, wall, paths and path
 -->
 <html lang="en" dir="ltr">
    <head>
@@ -30,10 +38,14 @@
          <h1>The ultimate path finding website</h1>
       </div>
       <div class="funPart">
+         <select class="paths" name="pathComboBox">
+            <option value="breadthFirstSearch">Breadth First Search</option>
+            <option value="AStartSearch">A*</option>
+         </select>
          <button type="button" name="start" onClick="breadthFirstSearch()">Find a path!</button>
          <button type="button" name="end" onClick="erasePath()">Start anew</button>
          <button type="button" name="makeGridButton" onClick="makeGrid()">Make a grid</button>
-         <canvas id="myCanvas" width="1200" height="800" onClick="selectSquareEvent()"></canvas>
+         <canvas id="myCanvas" width="1200" height="800" onmousedown="colorBarriers()"onmousemove="drawBarriers()" onmouseup="stopColoringBarriers()" onClick="pickStartAndEnd()" ></canvas>
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
@@ -53,6 +65,7 @@
          var startCol = 0;
          var endRow = 0;
          var endCol = 0;
+         var mouseDown = false;
          var visitedTile = new Array();
          var distanceFromStart = new Array();
          for (var i = 0; i < NUM_ROWS; i++) {
@@ -63,6 +76,7 @@
                distanceFromStart[i][j] = (NUM_COLS * NUM_ROWS) + 1;
             }
          }
+         //Makes an empty grid
          function makeGrid() {
             for (var i = 0; i < NUM_ROWS; i++) {
                for (var j = 0; j < NUM_COLS; j++) {
@@ -73,6 +87,7 @@
                }
             }
          }
+         //Preforms Search
          function breadthFirstSearch() {
             if (!pickedStart || !pickedEnd) {return;}
             //Breath First Search Below
@@ -98,6 +113,7 @@
                colorShortestPath();
             }
          }
+         //Resets the board
          function erasePath() {
             context.clearRect(0, 0, canvas.width, canvas.height);
             for (var i = 0; i < NUM_ROWS; i++) {
@@ -114,6 +130,7 @@
             endRow = 0;
             endCol = 0;
          }
+         //Colors a box
          function colorBox(row, col, color) {
             context.beginPath();
             context.lineWidth = "2";
@@ -122,6 +139,19 @@
             context.stroke();
             context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
          }
+         //Draws Barriers
+         function drawBarriers() {
+            if (!mouseDown) {return;}
+            var col = Math.floor((event.clientX - 260) / TILE_WIDTH);
+            var row = Math.floor((event.clientY - 80) / TILE_HEIGHT);
+            if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
+            // else if (visitedTile[row][col]) {colorBox(row, col, "white"); visitedTile[row][col] = false;} //If [row][col] is colored it makes it white
+            else {
+            colorBox(row, col, WALL_COLOR);
+            visitedTile[row][col] = true;
+            }
+         }
+         //Check whether box is valid, if so, it colors it
          function colorIfValid(row, col, color, newCoords, currentDistance) {
             if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0 && !visitedTile[row][col]) {
                newCoords.push(new Array(row, col));
@@ -132,12 +162,11 @@
             }
             return false;
          }
-         function selectSquareEvent() {
+         //On canvas click checks if a start and end have been picked
+         function pickStartAndEnd() {
             var col = Math.floor((event.clientX - 260) / TILE_WIDTH);
             var row = Math.floor((event.clientY - 80) / TILE_HEIGHT);
-            //Future feature: If you pick a square that has already been picked it changes the color
-            //of the type of square Types: start, end, wall, paths and path
-            //Future feature: Hold down click to create walls
+            if (visitedTile[row][col]) {return;}
             if (!pickedStart) {
                pickedStart = true;
                startRow = row;
@@ -150,15 +179,10 @@
                endRow = row;
                endCol = col;
                colorBox(row, col, END_COLOR);
-            } else {
-               if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
-               colorBox(row, col, WALL_COLOR);
-               visitedTile[row][col] = true;
             }
          }
+         //Colors the shortest path if a path exists
          function colorShortestPath() {
-            // alert("Found the shortest path, it is of length: " + distanceFromStart[endRow][endCol]);
-            // break;
             var currentRow = endRow;
             var currentCol = endCol;
             var currentDistance = distanceFromStart[endRow][endCol];
@@ -168,6 +192,7 @@
                if (tryTile(currentRow, currentCol+1)) {currentDistance--; currentCol++;continue;}
                if (tryTile(currentRow, currentCol-1)) {currentDistance--; currentCol--;continue;}
             }
+            //Helper function
             function tryTile(row, col) {
                if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0) {
                   if (distanceFromStart[row][col] == currentDistance-1) {
@@ -177,6 +202,14 @@
                }
                return false;
             }
+         }
+         //Lets barriers be colored
+         function colorBarriers() {
+            mouseDown = true;
+         }
+         //Stops the coloring of barriers
+         function stopColoringBarriers() {
+            mouseDown = false;
          }
       </script>
    </body>
