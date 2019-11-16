@@ -19,12 +19,16 @@
    Goal #4: Allow the user to create barriers by holding down click.
    [Accomplished]
    Goal #5: Allow the user to delete barriers when holding right click. Add A* search and allow the users to choose between BFS and A*
-   with a combo box. Also, slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
+   with a combo box.
+   [Accomplished]
+   Goal #6: Have the grid be made when the site is loaded. Move the buttons to the top of the page. Make the grid wider and move it down.
+   Display the length of the path. 
 -->
 <!--
    Future Features:
    -If you pick a square that has already been picked it changes the color
    of the type of square Types: start, end, wall, paths and path
+   -Slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
 -->
 <html lang="en" dir="ltr">
    <head>
@@ -38,14 +42,14 @@
          <h1>The ultimate path finding website</h1>
       </div>
       <div class="funPart">
-         <!-- <select class="paths" name="pathComboBox">
+         <select class="paths" id="pathComboBox">
             <option value="breadthFirstSearch">Breadth First Search</option>
-            <option value="AStartSearch">A*</option>
-         </select> -->
-         <button type="button" name="start" onClick="breadthFirstSearch()">Find a path!</button>
+            <option value="AStarSearch">A*</option>
+         </select>
+         <button type="button" name="start" onClick="handlePathChoice()">Find a path!</button>
          <button type="button" name="end" onClick="erasePath()">Start anew</button>
          <button type="button" name="makeGridButton" onClick="makeGrid()">Make a grid</button>
-         <canvas id="myCanvas" width="1200" height="800" onmousedown="colorBarriers()"onmousemove="drawBarriers()" onmouseup="stopColoringBarriers()" onClick="pickStartAndEnd()" ></canvas>
+         <canvas id="myCanvas" width="1200" height="800" oncontextmenu="return false;" onmousedown="colorBarriers()"onmousemove="drawBarriers()" onmouseup="stopColoringBarriers()" onClick="pickStartAndEnd()" onmouseleave="stopColoringBarriers()"></canvas>
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
@@ -59,13 +63,17 @@
          var PATH_COLOR = "blue";
          var WALL_COLOR = "orange";
          var SHORTEST_PATH_COLOR = "pink";
+         var ROW_OFFSET = 80;
+         var COL_OFFSET = 408;
+         var DELAY = 500;
          var pickedStart = false;
          var pickedEnd = false;
          var startRow = 0;
          var startCol = 0;
          var endRow = 0;
          var endCol = 0;
-         var mouseDown = false;
+         var drawTiles = false;
+         var eraseTiles = false;
          var visitedTile = new Array();
          var distanceFromStart = new Array();
          for (var i = 0; i < NUM_ROWS; i++) {
@@ -76,17 +84,7 @@
                distanceFromStart[i][j] = (NUM_COLS * NUM_ROWS) + 1;
             }
          }
-         //Makes an empty grid
-         function makeGrid() {
-            for (var i = 0; i < NUM_ROWS; i++) {
-               for (var j = 0; j < NUM_COLS; j++) {
-                  context.beginPath();
-                  context.lineWidth = "2";
-                  context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-                  context.stroke();
-               }
-            }
-         }
+
          //Preforms Search
          function breadthFirstSearch() {
             if (!pickedStart || !pickedEnd) {return;}
@@ -113,44 +111,7 @@
                colorShortestPath();
             }
          }
-         //Resets the board
-         function erasePath() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            for (var i = 0; i < NUM_ROWS; i++) {
-               for (var j = 0; j < NUM_COLS; j++) {
-                  visitedTile[i][j] = false;
-                  distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
-               }
-            }
-            makeGrid();
-            pickedStart = false;
-            pickedEnd = false;
-            startRow = 0;
-            startCol = 0;
-            endRow = 0;
-            endCol = 0;
-         }
-         //Colors a box
-         function colorBox(row, col, color) {
-            context.beginPath();
-            context.lineWidth = "2";
-            context.fillStyle = color;
-            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-            context.stroke();
-            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-         }
-         //Draws Barriers
-         function drawBarriers() {
-            if (!mouseDown) {return;}
-            var col = Math.floor((event.clientX - 260) / TILE_WIDTH);
-            var row = Math.floor((event.clientY - 80) / TILE_HEIGHT);
-            if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
-            // else if (visitedTile[row][col]) {colorBox(row, col, "white"); visitedTile[row][col] = false;} //If [row][col] is colored it makes it white
-            else {
-            colorBox(row, col, WALL_COLOR);
-            visitedTile[row][col] = true;
-            }
-         }
+
          //Check whether box is valid, if so, it colors it
          function colorIfValid(row, col, color, newCoords, currentDistance) {
             if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0 && !visitedTile[row][col]) {
@@ -164,8 +125,8 @@
          }
          //On canvas click checks if a start and end have been picked
          function pickStartAndEnd() {
-            var col = Math.floor((event.clientX - 260) / TILE_WIDTH);
-            var row = Math.floor((event.clientY - 80) / TILE_HEIGHT);
+            var col = Math.floor((event.clientX - COL_OFFSET) / TILE_WIDTH);
+            var row = Math.floor((event.clientY - ROW_OFFSET) / TILE_HEIGHT);
             if (visitedTile[row][col]) {return;}
             if (!pickedStart) {
                pickedStart = true;
@@ -179,6 +140,97 @@
                endRow = row;
                endCol = col;
                colorBox(row, col, END_COLOR);
+            }
+         }
+         function aStarSearch() {
+            var FLT_MAX = 100000;
+            var openList = new Array();
+            var closedList = new Array();
+            var cellDetails = new Array();
+            for (var i = 0; i < NUM_ROWS; i++) {
+               closedList.push(new Array(NUM_COLS));
+               cellDetails.push(new Array(NUM_COLS));
+               for (var j = 0; j < NUM_COLS; j++) {
+                  cellDetails[i][j] = new Array();
+                  cellDetails[i][j][0] = FLT_MAX;
+                  cellDetails[i][j][1] = FLT_MAX;
+                  cellDetails[i][j][2] = FLT_MAX;
+                  cellDetails[i][j][3] = -1;
+                  cellDetails[i][j][4] = -1;
+                  closedList[i][j] = false;
+               }
+            }
+            var row = startRow;
+            var col = startCol;
+            cellDetails[row][col][0] = 0.0; //f
+            cellDetails[row][col][1] = 0.0; //g
+            cellDetails[row][col][2] = 0.0; //h
+            cellDetails[row][col][3] = row; //parent_row
+            cellDetails[row][col][4] = col; //parent_col
+            openList.push(new Array(0.0, row, col));
+            var foundDest = false;
+            //Add distances to
+            while (openList.length > 0 && !foundDest) {
+               var newG = -1; var newH = -1; var newF = -1;
+               var p = openList[0];
+               openList.splice(0, 1);
+               row = p[1];
+               col = p[2];
+               closedList[row][col] = true;
+               ifValidThenUpdate(row+1, col, row, col);
+               ifValidThenUpdate(row-1, col, row, col);
+               ifValidThenUpdate(row, col+1, row, col);
+               ifValidThenUpdate(row, col-1, row, col);
+            }
+            if (foundDest) {
+               var currentRow = endRow;
+               var currentCol = endCol;
+               while (true) {
+                  var tempRow = currentRow;
+                  currentRow = cellDetails[currentRow][currentCol][3];
+                  currentCol = cellDetails[tempRow][currentCol][4];
+                  if (currentRow == startRow && currentCol == startCol) {break;}
+                  colorBox(currentRow, currentCol, SHORTEST_PATH_COLOR);
+               }
+            }
+
+            // Helper function
+            function ifValidThenUpdate(newRow, newCol, oldRow, oldCol) {
+               if (newRow < 0 || newRow >= NUM_ROWS || newCol < 0 || newCol >= NUM_COLS || visitedTile[newRow][newCol]) {return;}
+               if (newRow == endRow && newCol == endCol) {
+                  cellDetails[newRow][newCol][3] = oldRow;
+                  cellDetails[newRow][newCol][4] = oldCol;
+                  foundDest = true;
+                  return;
+               } else if (!closedList[newRow][newCol]) {
+                  newG = cellDetails[oldRow][oldCol][1] + 1.0;
+                  newH = (Math.abs(newRow - endRow) + Math.abs(newCol - endCol));
+                  newF = newG + newH;
+                  if (cellDetails[newRow][newCol][0] == FLT_MAX || cellDetails[newRow][newCol][0] > newF) {
+                     var currentIndex = 0;
+                     var found = false;
+                     while (currentIndex < openList.length) {
+                        if (openList[currentIndex][0] >= newF) {
+                           openList.splice(currentIndex, 0, new Array(newF, newRow, newCol))
+                           found = true;
+                           break;
+                        }
+                        currentIndex++;
+                     }
+                     if (!found) {
+                        openList.push(new Array(newF, newRow, newCol));
+                     }
+                     cellDetails[newRow][newCol][0] = newF;
+                     cellDetails[newRow][newCol][1] = newG;
+                     cellDetails[newRow][newCol][2] = newH;
+                     cellDetails[newRow][newCol][3] = oldRow;
+                     cellDetails[newRow][newCol][4] = oldCol;
+                     colorBox(newRow, newCol, PATH_COLOR);
+                  }
+               }
+            }
+            function getHValue(newRow, newCol) {
+               return Math.sqrt(((newRow - endRow) * (newRow - endRow)) + ((newCol - endCol) * (newCol - endCol)));
             }
          }
          //Colors the shortest path if a path exists
@@ -203,13 +255,86 @@
                return false;
             }
          }
+         //Resets the board
+         function erasePath() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < NUM_ROWS; i++) {
+               for (var j = 0; j < NUM_COLS; j++) {
+                  visitedTile[i][j] = false;
+                  distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
+               }
+            }
+            makeGrid();
+            pickedStart = false;
+            pickedEnd = false;
+            startRow = 0;
+            startCol = 0;
+            endRow = 0;
+            endCol = 0;
+            drawTiles = false;
+            eraseTiles = false;
+         }
+         //Colors a box
+         function colorBox(row, col, color) {
+            context.beginPath();
+            context.lineWidth = "2";
+            context.fillStyle = color;
+            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.stroke();
+            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+         }
+         //Draws Barriers
+         function drawBarriers() {
+            if (!drawTiles && !eraseTiles) {return;}
+            var col = Math.floor((event.clientX - COL_OFFSET) / TILE_WIDTH);
+            var row = Math.floor((event.clientY - ROW_OFFSET) / TILE_HEIGHT);
+            if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
+            else if (drawTiles){
+               colorBox(row, col, WALL_COLOR);
+               visitedTile[row][col] = true;
+            } else {
+               context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+               context.beginPath();
+               context.lineWidth = "2";
+               context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+               context.stroke();
+               visitedTile[row][col] = false;
+            }
+         }
          //Lets barriers be colored
          function colorBarriers() {
-            mouseDown = true;
+            var buttonClicked = event.button;
+            if (buttonClicked == 2) {
+               eraseTiles = true;
+               drawTiles = false;
+            } else if (buttonClicked == 0) {
+               drawTiles = true;
+               eraseTiles = false;
+            }
          }
          //Stops the coloring of barriers
          function stopColoringBarriers() {
-            mouseDown = false;
+            eraseTiles = false;
+            drawTiles = false;
+         }
+         //Makes an empty grid
+         function makeGrid() {
+            for (var i = 0; i < NUM_ROWS; i++) {
+               for (var j = 0; j < NUM_COLS; j++) {
+                  context.beginPath();
+                  context.lineWidth = "2";
+                  context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                  context.stroke();
+               }
+            }
+         }
+         function handlePathChoice() {
+            var algorithm = document.getElementById("pathComboBox").value;
+            if (algorithm == "breadthFirstSearch") {
+               breadthFirstSearch();
+            } else if (algorithm == "AStarSearch") {
+               aStarSearch();
+            }
          }
       </script>
    </body>
