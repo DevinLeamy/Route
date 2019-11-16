@@ -1,0 +1,46 @@
+/*Navigation bar and the like */
+#intro_header {
+   text-align: left;
+   font-family: monospace;
+   font-size: 20px;
+
+}
+button {
+   text-align: center;
+   width: 100px;
+   height: 50px;
+}
+ul {
+   margin-bottom: 100px;
+   list-style-type: none;
+   padding: 0;
+   margin: 0;
+   overflow: hidden;
+   text-align: center;
+}
+ul li {
+   font-size: 15px;
+   float: left;
+   display: inline-block;
+   width: 50px;
+   height: 25px;
+   margin: 10px 100px 10px 40px;
+}
+#searchBtn {
+   background-color: #ff073a
+}
+#refreshBtn {
+   background-color: #dbc300
+}
+#pathComboBox {
+   background-color: #1261A0;
+   color: white;
+   border-radius: 0px;
+}
+
+
+
+/*Grid*/
+#grid {
+   text-align: center;
+}
