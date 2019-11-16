@@ -22,7 +22,7 @@
    with a combo box.
    [Accomplished]
    Goal #6: Have the grid be made when the site is loaded. Move the buttons to the top of the page. Make the grid wider and move it down.
-   Display the length of the path. 
+   Display the length of the path.
 -->
 <!--
    Future Features:
@@ -46,14 +46,23 @@
             <option value="breadthFirstSearch">Breadth First Search</option>
             <option value="AStarSearch">A*</option>
          </select>
-         <button type="button" name="start" onClick="handlePathChoice()">Find a path!</button>
-         <button type="button" name="end" onClick="erasePath()">Start anew</button>
-         <button type="button" name="makeGridButton" onClick="makeGrid()">Make a grid</button>
-         <canvas id="myCanvas" width="1200" height="800" oncontextmenu="return false;" onmousedown="colorBarriers()"onmousemove="drawBarriers()" onmouseup="stopColoringBarriers()" onClick="pickStartAndEnd()" onmouseleave="stopColoringBarriers()"></canvas>
+         <button id="searchBtn" type="button" name="start">Find a path!</button>
+         <button id="refreshBtn" type="button" name="end">Start anew</button>
+         <canvas id="myCanvas" width="1200" height="800" oncontextmenu="return false;"></canvas>
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
          var context = canvas.getContext("2d");
+         window.onload = makeGrid;
+         canvas.onmousemove = drawBarriers;
+         canvas.onmousedown = colorBarriers;
+         canvas.onmouseup = stopColoringBarriers;
+         canvas.onclick = pickStartAndEnd;
+         canvas.onmouseleave = stopColoringBarriers;
+         var searchBtn = document.getElementById("searchBtn");
+         searchBtn.onclick = handlePathChoice;
+         var refreshBtn = document.getElementById("refreshBtn");
+         refreshBtn.onclick = erasePath;
          var TILE_HEIGHT = 40;
          var TILE_WIDTH = 40;
          var NUM_ROWS = 20;
@@ -64,7 +73,7 @@
          var WALL_COLOR = "orange";
          var SHORTEST_PATH_COLOR = "pink";
          var ROW_OFFSET = 80;
-         var COL_OFFSET = 408;
+         var COL_OFFSET = 323;
          var DELAY = 500;
          var pickedStart = false;
          var pickedEnd = false;
@@ -125,6 +134,7 @@
          }
          //On canvas click checks if a start and end have been picked
          function pickStartAndEnd() {
+            // alert(event.clientX + " " + event.clientY);
             var col = Math.floor((event.clientX - COL_OFFSET) / TILE_WIDTH);
             var row = Math.floor((event.clientY - ROW_OFFSET) / TILE_HEIGHT);
             if (visitedTile[row][col]) {return;}
