@@ -23,6 +23,11 @@
    [Accomplished]
    Goal #6: Have the grid be made when the site is loaded. Move the buttons to the top of the page. Make the grid wider and move it down.
    Display the length of the path.
+   [Accomplished]
+   Goal #7: Have a default grid setup and allow the user to move the start and end tiles. Blockify the buttons. Fix the length display.
+   [In Progress]
+   Goal #8: Change the path drawing animation. Have a help button that, when clicked, will tell the user how to use the website. Create a way
+   to make weighted graphes.
 -->
 <!--
    Future Features:
@@ -30,25 +35,46 @@
    of the type of square Types: start, end, wall, paths and path
    -Slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
 -->
+<!--
+   Bugs:
+   -When dragging the start or end blocks, if the dragged block passes over the opposing block it deletes it. [Fixed]
+   -When you drag the blocks outside of the screen it breaks the pathfinding. [Fixed]
+
+-->
 <html lang="en" dir="ltr">
    <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
       <!-- <script type="text/javascript" src="algorithms.js"></script> -->
-      <!-- <link rel="stylesheet" href="style.css"> -->
-      <title></title>
+      <link rel="stylesheet" href="style.css">
+      <title>The_Utimate_Pathfinding_Website</title>
    </head>
+
+
    <body>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/js/bootstrap.min.js" integrity="sha384-vZ2WRJMwsjRMW/8U7i6PWi6AlO1L79snBrmgiDpgIWJ82z8eA5lenwvxbMV1PAh7" crossorigin="anonymous"></script>
+
+
       <div class="intro">
-         <h1>The ultimate path finding website</h1>
+         <h1 id="intro_header">The Ultimate Pathfinding Website</h1>
       </div>
-      <div class="funPart">
-         <select class="paths" id="pathComboBox">
-            <option value="breadthFirstSearch">Breadth First Search</option>
-            <option value="AStarSearch">A*</option>
-         </select>
-         <button id="searchBtn" type="button" name="start">Find a path!</button>
-         <button id="refreshBtn" type="button" name="end">Start anew</button>
-         <canvas id="myCanvas" width="1200" height="800" oncontextmenu="return false;"></canvas>
+      <div id="container1">
+         <ul id="nav_bar">
+            <li><button id="searchBtn" type="button" class="btn btn-success">Find a path!</button> </li>
+            <li><button id="refreshBtn" type="button" class="btn btn-success">Start anew</button></li>
+            <li><select id="pathComboBox">
+               <option value="breadthFirstSearch">Breadth First Search</option>
+               <option value="AStarSearch">A*</option>
+            </select></li>
+            <li><h4>Length: <span id="lengthLbl" class="badge badge-btn-secondary">This says nothing</span></h4></li>
+         </ul>
+      </div>
+      <div id="grid">
+         <canvas id="myCanvas" width="1800" height="1000" oncontextmenu="return false;"></canvas>
+
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
@@ -63,18 +89,23 @@
          searchBtn.onclick = handlePathChoice;
          var refreshBtn = document.getElementById("refreshBtn");
          refreshBtn.onclick = erasePath;
+         var lengthLbl = document.getElementById("lengthLbl");
          var TILE_HEIGHT = 40;
          var TILE_WIDTH = 40;
-         var NUM_ROWS = 20;
-         var NUM_COLS = 30;
-         var START_COLOR = "green";
-         var END_COLOR = "red";
-         var PATH_COLOR = "blue";
-         var WALL_COLOR = "orange";
-         var SHORTEST_PATH_COLOR = "pink";
-         var ROW_OFFSET = 80;
-         var COL_OFFSET = 323;
+         var NUM_ROWS = 25;
+         var NUM_COLS = 45;
+         var START_COLOR = "#a4de02";
+         var END_COLOR = "#ff0800";
+         var PATH_COLOR = "#27aee3";
+         var WALL_COLOR = "#e05a00";
+         var SHORTEST_PATH_COLOR = "#ff68b4";
+         var GRIDLINES_COLOR = "#808080";
+         var ROW_OFFSET = 77;
+         var COL_OFFSET = 3;
          var DELAY = 500;
+         var GRIDLINES_WIDTH = "1";
+         var draggingStart = false;
+         var draggingEnd = false;
          var pickedStart = false;
          var pickedEnd = false;
          var startRow = 0;
@@ -195,13 +226,16 @@
             if (foundDest) {
                var currentRow = endRow;
                var currentCol = endCol;
+               var lengthOfPath = 0;
                while (true) {
                   var tempRow = currentRow;
                   currentRow = cellDetails[currentRow][currentCol][3];
                   currentCol = cellDetails[tempRow][currentCol][4];
                   if (currentRow == startRow && currentCol == startCol) {break;}
                   colorBox(currentRow, currentCol, SHORTEST_PATH_COLOR);
+                  lengthOfPath++;
                }
+               lengthLbl.textContent = lengthOfPath+1;
             }
 
             // Helper function
@@ -248,12 +282,14 @@
             var currentRow = endRow;
             var currentCol = endCol;
             var currentDistance = distanceFromStart[endRow][endCol];
+            var lengthOfPath = currentDistance;
             while (currentDistance > 1) {
                if (tryTile(currentRow+1, currentCol)) {currentDistance--; currentRow++;continue;}
                if (tryTile(currentRow-1, currentCol)) {currentDistance--; currentRow--;continue;}
                if (tryTile(currentRow, currentCol+1)) {currentDistance--; currentCol++;continue;}
                if (tryTile(currentRow, currentCol-1)) {currentDistance--; currentCol--;continue;}
             }
+            lengthLbl.textContent = lengthOfPath;
             //Helper function
             function tryTile(row, col) {
                if (row < NUM_ROWS && row >= 0 && col < NUM_COLS && col >= 0) {
@@ -275,6 +311,7 @@
                }
             }
             makeGrid();
+            lengthLbl.textContent = "This says nothing";
             pickedStart = false;
             pickedEnd = false;
             startRow = 0;
@@ -287,17 +324,25 @@
          //Colors a box
          function colorBox(row, col, color) {
             context.beginPath();
-            context.lineWidth = "2";
+            context.lineWidth = GRIDLINES_WIDTH;
             context.fillStyle = color;
             context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.strokeStyle = GRIDLINES_COLOR;
             context.stroke();
             context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
          }
          //Draws Barriers
          function drawBarriers() {
-            if (!drawTiles && !eraseTiles) {return;}
             var col = Math.floor((event.clientX - COL_OFFSET) / TILE_WIDTH);
             var row = Math.floor((event.clientY - ROW_OFFSET) / TILE_HEIGHT);
+            if (draggingStart) {
+               replaceStart(row, col);
+               return;
+            } else if (draggingEnd) {
+               replaceEnd(row, col);
+               return;
+            }
+            if (!drawTiles && !eraseTiles) {return;}
             if ((row == startRow && col == startCol) || (row == endRow && col == endCol)) {return;}
             else if (drawTiles){
                colorBox(row, col, WALL_COLOR);
@@ -305,35 +350,46 @@
             } else {
                context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.beginPath();
-               context.lineWidth = "2";
+               context.lineWidth = GRIDLINES_WIDTH;
                context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+               context.strokeStyle = GRIDLINES_COLOR;
                context.stroke();
                visitedTile[row][col] = false;
             }
          }
          //Lets barriers be colored
          function colorBarriers() {
-            var buttonClicked = event.button;
-            if (buttonClicked == 2) {
-               eraseTiles = true;
-               drawTiles = false;
-            } else if (buttonClicked == 0) {
-               drawTiles = true;
-               eraseTiles = false;
+
+            var imageData = context.getImageData(event.clientX - COL_OFFSET, event.clientY-ROW_OFFSET, 1, 1).data;
+            var hexColor = rgbToHex(imageData[0], imageData[1], imageData[2]);
+            if (hexColor == END_COLOR) {draggingEnd = true;}
+            else if (hexColor == START_COLOR) {draggingStart = true;}
+            else {
+               var buttonClicked = event.button;
+               if (buttonClicked == 2) {
+                  eraseTiles = true;
+                  drawTiles = false;
+               } else if (buttonClicked == 0) {
+                  drawTiles = true;
+                  eraseTiles = false;
+               }
             }
          }
          //Stops the coloring of barriers
          function stopColoringBarriers() {
             eraseTiles = false;
             drawTiles = false;
+            draggingStart = false;
+            draggingEnd = false;
          }
          //Makes an empty grid
          function makeGrid() {
             for (var i = 0; i < NUM_ROWS; i++) {
                for (var j = 0; j < NUM_COLS; j++) {
                   context.beginPath();
-                  context.lineWidth = "2";
+                  context.lineWidth = GRIDLINES_WIDTH;
                   context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                  context.strokeStyle = GRIDLINES_COLOR;
                   context.stroke();
                }
             }
@@ -345,6 +401,35 @@
             } else if (algorithm == "AStarSearch") {
                aStarSearch();
             }
+         }
+         function rgbToHex(red, green, blue) {
+            var rgb = blue | (green << 8) | (red << 16);
+            return '#' + (0x1000000 + rgb).toString(16).slice(1)
+         }
+         function replaceStart(row, col) {
+            if (row == endRow && col == endCol) {return;}
+            visitedTile[startRow][startCol] = false;
+            visitedTile[row][col] = true;
+            redraw(startRow, startCol);
+            colorBox(row, col, START_COLOR);
+            startRow = row;
+            startCol = col;
+         }
+         function replaceEnd(row, col) {
+            if (row == startRow && col == startCol) {return;}
+            visitedTile[row][col] = false;
+            redraw(endRow, endCol);
+            colorBox(row, col, END_COLOR);
+            endRow = row;
+            endCol = col;
+         }
+         function redraw(row, col) {
+            context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.beginPath();
+            context.lineWidth = GRIDLINES_WIDTH;
+            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.strokeStyle = GRIDLINES_COLOR;
+            context.stroke();
          }
       </script>
    </body>
