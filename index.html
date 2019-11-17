@@ -25,9 +25,11 @@
    Display the length of the path.
    [Accomplished]
    Goal #7: Have a default grid setup and allow the user to move the start and end tiles. Blockify the buttons. Fix the length display.
+   [Accomplished]
+   Goal #8: Change the path drawing animation. Have a help button that, when clicked, will tell the user how to use the website.
+   Have a remove path button that removes only the paths.
    [In Progress]
-   Goal #8: Change the path drawing animation. Have a help button that, when clicked, will tell the user how to use the website. Create a way
-   to make weighted graphes.
+   Goal #9: Create a way to make weighted graphes.
 -->
 <!--
    Future Features:
@@ -63,13 +65,14 @@
       </div>
       <div id="container1">
          <ul id="nav_bar">
-            <li><button id="searchBtn" type="button" class="btn btn-success">Find a path!</button> </li>
-            <li><button id="refreshBtn" type="button" class="btn btn-success">Start anew</button></li>
+            <li><button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button> </li>
+            <li><button id="refreshBtn" type="button" class="btn btn-warning">Restart</button></li>
             <li><select id="pathComboBox">
                <option value="breadthFirstSearch">Breadth First Search</option>
                <option value="AStarSearch">A*</option>
             </select></li>
-            <li><h4>Length: <span id="lengthLbl" class="badge badge-btn-secondary">This says nothing</span></h4></li>
+            <li><button type="button" class="btn btn-info" id="lengthBtn">Length of the Path: <span class="badge" id="lengthLbl">0</span></button></li>
+            <li><button type="button" class="btn btn-dark" id="computationsBtn">Number of Operations: <span class="badge" id="computationsLbl">0</span></button></li>
          </ul>
       </div>
       <div id="grid">
@@ -79,7 +82,7 @@
       <script>
          var canvas = document.getElementById("myCanvas");
          var context = canvas.getContext("2d");
-         window.onload = makeGrid;
+         window.onload = initializeTheGrid;
          canvas.onmousemove = drawBarriers;
          canvas.onmousedown = colorBarriers;
          canvas.onmouseup = stopColoringBarriers;
@@ -90,15 +93,16 @@
          var refreshBtn = document.getElementById("refreshBtn");
          refreshBtn.onclick = erasePath;
          var lengthLbl = document.getElementById("lengthLbl");
+         var computationsLbl = document.getElementById("computationsLbl");
          var TILE_HEIGHT = 40;
          var TILE_WIDTH = 40;
          var NUM_ROWS = 25;
          var NUM_COLS = 45;
-         var START_COLOR = "#a4de02";
+         var START_COLOR = "#55d43f";
          var END_COLOR = "#ff0800";
          var PATH_COLOR = "#27aee3";
-         var WALL_COLOR = "#e05a00";
-         var SHORTEST_PATH_COLOR = "#ff68b4";
+         var WALL_COLOR = "#36454f";
+         var SHORTEST_PATH_COLOR = "#ef820d";
          var GRIDLINES_COLOR = "#808080";
          var ROW_OFFSET = 77;
          var COL_OFFSET = 3;
@@ -134,20 +138,26 @@
             currentCoords.push(new Array(startRow, startCol)); // This should be new Array(startRow, startCol)
             if (startRow == endRow && startCol == endCol) {found = true;}
             var currentDistance = 1;
+            var computationsCounted = 0;
             while (!found && currentCoords.length > 0) {
                var newCoords = new Array();
                for (var i = 0; i < currentCoords.length; i++) {
                   var row = currentCoords[i][0];
                   var col = currentCoords[i][1];
                   if (colorIfValid(row+1, col, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  computationsCounted++;
                   if (colorIfValid(row-1, col, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  computationsCounted++;
                   if (colorIfValid(row, col+1, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  computationsCounted++;
                   if (colorIfValid(row, col-1, PATH_COLOR, newCoords, currentDistance)) {found = true; break;}
+                  computationsCounted++;
                }
                currentCoords = Array.from(newCoords);
                currentDistance++;
             }
             if (found) {
+               computationsLbl.textContent = computationsCounted;
                colorShortestPath();
             }
          }
@@ -188,6 +198,7 @@
             var openList = new Array();
             var closedList = new Array();
             var cellDetails = new Array();
+            var computationsCounted = 0;
             for (var i = 0; i < NUM_ROWS; i++) {
                closedList.push(new Array(NUM_COLS));
                cellDetails.push(new Array(NUM_COLS));
@@ -219,11 +230,16 @@
                col = p[2];
                closedList[row][col] = true;
                ifValidThenUpdate(row+1, col, row, col);
+               computationsCounted++;
                ifValidThenUpdate(row-1, col, row, col);
+               computationsCounted++;
                ifValidThenUpdate(row, col+1, row, col);
+               computationsCounted++;
                ifValidThenUpdate(row, col-1, row, col);
+               computationsCounted++;
             }
             if (foundDest) {
+               computationsLbl.textContent = computationsCounted;
                var currentRow = endRow;
                var currentCol = endCol;
                var lengthOfPath = 0;
@@ -310,16 +326,13 @@
                   distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
                }
             }
-            makeGrid();
-            lengthLbl.textContent = "This says nothing";
-            pickedStart = false;
-            pickedEnd = false;
-            startRow = 0;
-            startCol = 0;
-            endRow = 0;
-            endCol = 0;
+            initializeTheGrid();
+            lengthLbl.textContent = "0";
+            computationsLbl.textContent = "0";
             drawTiles = false;
             eraseTiles = false;
+            draggingEnd = false;
+            draggingStart = false;
          }
          //Colors a box
          function colorBox(row, col, color) {
@@ -430,6 +443,18 @@
             context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
             context.strokeStyle = GRIDLINES_COLOR;
             context.stroke();
+         }
+         function initializeTheGrid() {
+            makeGrid();
+            pickedStart = true;
+            startRow = 10;
+            startCol = 15;
+            pickedEnd = true;
+            visitedTile[startRow][startCol] = true;
+            endRow = 10;
+            endCol = 29;
+            colorBox(startRow, startCol, START_COLOR);
+            colorBox(endRow, endCol, END_COLOR);
          }
       </script>
    </body>
