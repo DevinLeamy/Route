@@ -39,6 +39,7 @@
    -Slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
    -Select starts with "Pick an algorithm", if the user clicks find a path it will default it to Breadth First
    search.
+   -Display cool design when the window is opened
 -->
 <!--
    Bugs:
@@ -71,6 +72,7 @@
             <li><button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button> </li>
             <li><button id="refreshBtn" type="button" class="btn btn-warning">Restart</button></li>
             <li><select id="pathComboBox">
+               <option value="default">Pick an Algorithm!</option>
                <option value="breadthFirstSearch">Breadth First Search</option>
                <option value="AStarSearch">A*</option>
             </select></li>
@@ -86,7 +88,7 @@
       <script>
          var canvas = document.getElementById("myCanvas");
          var context = canvas.getContext("2d");
-         window.onload = initializeTheGrid;
+         window.onload = makeLaunchDesign;
          canvas.onmousemove = drawBarriers;
          canvas.onmousedown = colorBarriers;
          canvas.onmouseup = stopColoringBarriers;
@@ -335,7 +337,7 @@
                   isPath[i][j] = false;
                }
             }
-
+            document.getElementById("pathComboBox").value = "default";
             initializeTheGrid();
             lengthLbl.textContent = "0";
             computationsLbl.textContent = "0";
@@ -383,6 +385,9 @@
          //Lets barriers be colored
          function colorBarriers() {
             // alert(event.clientX + " " + event.clientY);
+            // var col = Math.floor((event.clientX - COL_OFFSET) / TILE_WIDTH);
+            // var row = Math.floor((event.clientY - ROW_OFFSET) / TILE_HEIGHT);
+            // alert(row + " " + col);
             var imageData = context.getImageData(event.clientX - COL_OFFSET, event.clientY-ROW_OFFSET, 1, 1).data;
             var hexColor = rgbToHex(imageData[0], imageData[1], imageData[2]);
             if (hexColor == END_COLOR) {draggingEnd = true;}
@@ -419,7 +424,8 @@
          }
          function handlePathChoice() {
             var algorithm = document.getElementById("pathComboBox").value;
-            if (algorithm == "breadthFirstSearch") {
+            if (algorithm == "breadthFirstSearch" || algorithm == "default") {
+               document.getElementById("pathComboBox").value = "breadthFirstSearch";
                breadthFirstSearch();
             } else if (algorithm == "AStarSearch") {
                aStarSearch();
@@ -487,7 +493,31 @@
             computationsLbl.textContent = "0";
          }
          function helpUser() {
-            alert("Green Node: Start \nRed Node: End \nFind a Path!: Finds the path between two nodes\nRestart: Double click to clear board, single to clear path \nBreadth First Search: An array of path finding algorithms \nDraw Barriers: Drag left click \nDelete Barriers: Drag right click")
+            alert("Green Node: Start \nRed Node: End \nFind a Path!: Finds the path between two nodes\nRestart: Double click to clear barriers and paths, single to clear paths \nPick an Algorithm!: An array of pathfinding algorithms \nDraw Barriers: Drag left click \nDelete Barriers: Drag right click\nMove Nodes: Drag and drop")
+         }
+         function makeLaunchDesign() {
+            initializeTheGrid();
+            var j = 7;
+            var i = 0;
+            for (i = 14; i <= 17; i++) {colorAndMark();} for (i = 27; i <= 30; i++) {colorAndMark();}
+            j = 9;
+            for (i = 13; i <= 31; i++) {colorAndMark();}
+            j = 10;
+            for (i = 19; i <= 25; i++) {colorAndMark();}
+            j = 11;
+            for (i = 13; i <= 31; i++) {colorAndMark();}
+            j = 14;
+            for (i = 16; i <= 28; i++) {colorAndMark();}
+            i = 16;
+            for (j = 14; j <= 17; j++) {colorAndMark();}
+            i = 28;
+            for (j = 14; j <= 17; j++) {colorAndMark();}
+            j = 17;
+            for (i = 16; i <= 28; i++) {colorAndMark();}
+            function colorAndMark() {
+               visitedTile[j][i] = true;
+               colorBox(j, i, WALL_COLOR);
+            }
          }
       </script>
    </body>
