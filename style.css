@@ -21,10 +21,12 @@ ul {
    padding: 0;
    margin: 0;
    text-align: justify;
+   margin-left: -5.5%
 }
 ul li select {
    width: 240px;
    height: 50px;
+
 }
 ul li {
    font-size: 15px;
@@ -41,6 +43,25 @@ ul li {
 }
 #computationsBtn {
    background-color: #8359a3;
+}
+#lengthBtn {
+   pointer-events: none;
+}
+#computationsBtn {
+   pointer-events: none;
+}
+#helperLbl {
+   right: 10px;
+   position: absolute;
+   text-align: center;
+   margin-left: 400px;
+   margin-top: 10px;
+   font-size: 30px;
+   width: 50px;
+   height: 50px;
+   color: white;
+   border-radius: 5px;
+   background-color: #008080
 }
 
 
