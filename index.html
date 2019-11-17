@@ -29,7 +29,7 @@
    Goal #8: Have a help button that, when clicked, will tell the user how to use the website.
    Have a remove path button that removes only the paths.
    [Accomplished]
-   Goal #9: Create a way to make weighted graphes.
+   Goal #9: Allow the user to pick a custom layout and create and save their own layouts.
 -->
 <!--
    Future Features:
@@ -39,7 +39,7 @@
    -Slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
    -Select starts with "Pick an algorithm", if the user clicks find a path it will default it to Breadth First
    search.
-   -Display cool design when the window is opened
+   -Display cool design when the window is opened [Done]
 -->
 <!--
    Bugs:
@@ -69,26 +69,32 @@
       </div>
       <div id="container1">
          <ul id="nav_bar">
-            <li><button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button> </li>
+            <li><button type="button" class="btn btn-info" id="lengthBtn">Length of the Path: <span class="badge" id="lengthLbl">0</span></button></li>
+            <li><button type="button" class="btn btn-dark" id="computationsBtn">Number of Operations: <span class="badge" id="computationsLbl">0</span></button></li>
             <li><button id="refreshBtn" type="button" class="btn btn-warning">Restart</button></li>
+            <li><button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button> </li>
             <li><select id="pathComboBox">
                <option value="default">Pick an Algorithm!</option>
                <option value="breadthFirstSearch">Breadth First Search</option>
                <option value="AStarSearch">A*</option>
             </select></li>
-            <li><button type="button" class="btn btn-info" id="lengthBtn">Length of the Path: <span class="badge" id="lengthLbl">0</span></button></li>
-            <li><button type="button" class="btn btn-dark" id="computationsBtn">Number of Operations: <span class="badge" id="computationsLbl">0</span></button></li>
+            <li><select id="layouts">
+               <option value="defaultText" id="0">Custom Layouts</option>
+               <option value="defaultLayout" id="1">Default</option>
+            </select></li>
          </ul>
          <span id="helperLbl" class="badge badge-info">??</span>
+         <button type="button" class="btn btn-dark" id="addLayout">+</button> <!--Allow the user to pick a custom weight <= 1000 and >= 0 -->
       </div>
       <div id="grid">
-         <canvas id="myCanvas" width="1800" height="1000" oncontextmenu="return false;"></canvas>
+         <canvas id="myCanvas" width="1760" height="960" oncontextmenu="return false;"></canvas>
 
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
          var context = canvas.getContext("2d");
-         window.onload = makeLaunchDesign;
+         // window.onload = makeLaunchDesign;
+         window.onload = initializeTheGrid;
          canvas.onmousemove = drawBarriers;
          canvas.onmousedown = colorBarriers;
          canvas.onmouseup = stopColoringBarriers;
@@ -103,20 +109,26 @@
          var computationsLbl = document.getElementById("computationsLbl");
          var helperLbl = document.getElementById("helperLbl");
          helperLbl.onclick = helpUser;
+         var layoutPicker = document.getElementById("layouts");
+         var addLayoutBtn = document.getElementById("addLayout");
+         addLayoutBtn.onclick = addLayout;
          var TILE_HEIGHT = 40;
          var TILE_WIDTH = 40;
-         var NUM_ROWS = 25;
-         var NUM_COLS = 45;
+         var NUM_ROWS = 49;
+         var NUM_COLS = 44;
          var START_COLOR = "#55d43f";
          var END_COLOR = "#ff0800";
          var PATH_COLOR = "#27aee3";
          var WALL_COLOR = "#36454f";
          var SHORTEST_PATH_COLOR = "#ef820d";
-         var GRIDLINES_COLOR = "#808080";
+         var GRIDLINES_COLOR = "#d3d3d3";
          var ROW_OFFSET = 104;
          var COL_OFFSET = 3;
          var DELAY = 500;
          var GRIDLINES_WIDTH = "1";
+         var currentLayout = 0;
+         var layouts = new Array();
+         var layoutsStartAndEnd = new Array();
          var draggingStart = false;
          var draggingEnd = false;
          var pickedStart = false;
@@ -127,20 +139,22 @@
          var endCol = 0;
          var drawTiles = false;
          var eraseTiles = false;
+         var isBarrier = new Array();
          var isPath = new Array();
          var visitedTile = new Array();
          var distanceFromStart = new Array();
          for (var i = 0; i < NUM_ROWS; i++) {
             visitedTile.push(new Array(NUM_COLS));
             distanceFromStart.push(new Array(NUM_COLS));
+            isBarrier.push(new Array(NUM_COLS));
             isPath.push(new Array(NUM_COLS));
             for (var j = 0; j < NUM_COLS; j++) {
                visitedTile[i][j] = false;
                distanceFromStart[i][j] = (NUM_COLS * NUM_ROWS) + 1;
                isPath[i][j] = false;
+               isBarrier[i][j] = false;
             }
          }
-
          //Preforms Search
          function breadthFirstSearch() {
             if (!pickedStart || !pickedEnd) {return;}
@@ -335,6 +349,7 @@
                   visitedTile[i][j] = false;
                   distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
                   isPath[i][j] = false;
+                  isBarrier[i][j] = true;
                }
             }
             document.getElementById("pathComboBox").value = "default";
@@ -372,6 +387,7 @@
             else if (drawTiles){
                colorBox(row, col, WALL_COLOR);
                visitedTile[row][col] = true;
+               isBarrier[row][col] = true;
             } else {
                context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.beginPath();
@@ -380,6 +396,7 @@
                context.strokeStyle = GRIDLINES_COLOR;
                context.stroke();
                visitedTile[row][col] = false;
+               isBarrier[row][col] = false;
             }
          }
          //Lets barriers be colored
@@ -461,16 +478,42 @@
             context.stroke();
          }
          function initializeTheGrid() {
+            var selectedLayout = layoutPicker.value;
             makeGrid();
-            pickedStart = true;
-            startRow = 10;
-            startCol = 15;
-            pickedEnd = true;
-            visitedTile[startRow][startCol] = true;
-            endRow = 10;
-            endCol = 29;
-            colorBox(startRow, startCol, START_COLOR);
-            colorBox(endRow, endCol, END_COLOR);
+            if (selectedLayout == "defaultText" || selectedLayout == "defaultLayout") {
+               pickedStart = true;
+               startRow = 10;
+               startCol = 15;
+               pickedEnd = true;
+               visitedTile[startRow][startCol] = true;
+               endRow = 10;
+               endCol = 29;
+               colorBox(startRow, startCol, START_COLOR);
+               colorBox(endRow, endCol, END_COLOR);
+            } else {
+               var indexOfLayout = parseInt(selectedLayout) - 2;
+               pickedStart = true;
+               pickedEnd = true;
+               startRow = layoutsStartAndEnd[indexOfLayout][0];
+               startCol = layoutsStartAndEnd[indexOfLayout][1];
+               endRow = layoutsStartAndEnd[indexOfLayout][2];
+               endCol = layoutsStartAndEnd[indexOfLayout][3];
+               for (var i = 0; i < NUM_ROWS; i++) {
+                  for (var j = 0; j < NUM_COLS; j++) {
+                     if (layouts[indexOfLayout][i][j]) {
+                        colorBox(i, j, WALL_COLOR);
+                        visitedTile[i][j] = true;
+                        isBarrier[i][j] = true;
+                     } else {
+                        visitedTile[i][j] = false;
+                        isBarrier[i][j] = false;
+                     }
+                  }
+               }
+               visitedTile[startRow][startCol] = true;
+               colorBox(startRow, startCol, START_COLOR);
+               colorBox(endRow, endCol, END_COLOR);
+            }
          }
          function removePath() {
             visitedTile[endRow][endCol] = false;
@@ -517,6 +560,43 @@
             function colorAndMark() {
                visitedTile[j][i] = true;
                colorBox(j, i, WALL_COLOR);
+            }
+         }
+         function addLayout() {
+            var unique = true;
+            for (var i = 0; i < layouts.length; i++) {
+               var areEqual = true;
+               for (var j = 0; j < NUM_ROWS; j++) {
+                  for (var z = 0; z < NUM_COLS; z++) {
+                     if (layouts[i][j][z] != isBarrier[j][z]) {
+                        areEqual = false;
+                     }
+                  }
+               }
+               if (areEqual) {
+                  unique = false;
+               }
+            }
+            if (unique) {
+               var newLayout = new Array();
+               for (var i = 0; i < NUM_ROWS; i++) {
+                  newLayout[i] = isBarrier[i].slice();
+               }
+               layouts.push(newLayout);
+               layoutsStartAndEnd.push(new Array(4));
+               layoutsStartAndEnd[layoutsStartAndEnd.length-1][0] = startRow;
+               layoutsStartAndEnd[layoutsStartAndEnd.length-1][1] = startCol;
+               layoutsStartAndEnd[layoutsStartAndEnd.length-1][2] = endRow;
+               layoutsStartAndEnd[layoutsStartAndEnd.length-1][3] = endCol;
+               var layoutName = prompt("Name your new custom layout:", "Custom Layout #" + layouts.length);
+               var newOption = document.createElement("option");
+               newOption.id = layouts.length + 1;
+               newOption.value = layouts.length + 1;
+               newOption.text = layoutName;
+               layoutPicker.add(newOption);
+               layoutPicker.value = layouts.length + 1;
+            } else {
+               alert("This layout has already been recorded")
             }
          }
       </script>
