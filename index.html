@@ -345,6 +345,7 @@
                colorBox(row, col, WALL_COLOR);
                visitedTile[row][col] = true;
                isBarrier[row][col] = true;
+               isPath[row][col] = false;
             } else {
                context.fillStyle = TILE_COLOR;
                context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
