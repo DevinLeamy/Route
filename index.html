@@ -419,6 +419,7 @@
             visitedTile[startRow][startCol] = false;
             visitedTile[row][col] = true;
             isBarrier[row][col] = false;
+            isPath[row][col] = false;
             redraw(startRow, startCol);
             colorBox(row, col, START_COLOR);
             startRow = row;
@@ -428,6 +429,7 @@
             if (row == startRow && col == startCol) {return;}
             visitedTile[row][col] = false;
             isBarrier[row][col] = false;
+            isPath[row][col] = false;
             redraw(endRow, endCol);
             colorBox(row, col, END_COLOR);
             endRow = row;
