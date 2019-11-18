@@ -1,52 +1,4 @@
 <!DOCTYPE html>
-<!--
-   Goal #1: Create a website with a single button that,
-   when clicked, will draw a line on the screen.
-   [Accomplished]
-   Goal #2: Create a wesite with two buttons and two text fields. The text fields will be named
-   start and end. In each text field the user will enter a coordinate location. There will also be start and
-   end buttons. The start button will draw the shortest path from the start to the end to the screen.
-   The end button will clear the screen.
-   [Accomplished]
-   Goal #3: Change the canvas into a kind of visitedTile and allow the user to select square in the visitedTile. They will be
-   able to select the starting point, the ending point and put barriers up. This change also means that the start
-   end buttons are going to have a slightly different function. The start button won't change much, when you click
-   it it will find the path and the end button will not clear the visitedTile rather than the canvas.
-   [Accomplished]
-   Goal #3: After selecting two points and putting up barriers, if a path is found between the two points then the a "some colored"
-   line be displayed from the start to the end showing the shortest path between the points. Also, show the length of the path.
-   [Accomplished]
-   Goal #4: Allow the user to create barriers by holding down click.
-   [Accomplished]
-   Goal #5: Allow the user to delete barriers when holding right click. Add A* search and allow the users to choose between BFS and A*
-   with a combo box.
-   [Accomplished]
-   Goal #6: Have the grid be made when the site is loaded. Move the buttons to the top of the page. Make the grid wider and move it down.
-   Display the length of the path.
-   [Accomplished]
-   Goal #7: Have a default grid setup and allow the user to move the start and end tiles. Blockify the buttons. Fix the length display.
-   [Accomplished]
-   Goal #8: Have a help button that, when clicked, will tell the user how to use the website.
-   Have a remove path button that removes only the paths.
-   [Accomplished]
-   Goal #9: Allow the user to pick a custom layout and create and save their own layouts.
--->
-<!--
-   Future Features:
-   -Unclear how, but, I would like to change the path drawing animation.
-   -If you pick a square that has already been picked it changes the color
-   of the type of square Types: start, end, wall, paths and path
-   -Slow down the tile drawing process, as of now it is too fast and, therefore, is not very imformative.
-   -Select starts with "Pick an algorithm", if the user clicks find a path it will default it to Breadth First
-   search.
-   -Display cool design when the window is opened [Done]
--->
-<!--
-   Bugs:
-   -When dragging the start or end blocks, if the dragged block passes over the opposing block it deletes it. [Fixed]
-   -When you drag the blocks outside of the screen it breaks the pathfinding. [Fixed]
-
--->
 <html lang="en" dir="ltr">
    <head>
       <meta charset="utf-8">
@@ -57,8 +9,6 @@
       <link rel="stylesheet" href="style.css">
       <title>The_Utimate_Pathfinding_Website</title>
    </head>
-
-
    <body>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/js/bootstrap.min.js" integrity="sha384-vZ2WRJMwsjRMW/8U7i6PWi6AlO1L79snBrmgiDpgIWJ82z8eA5lenwvxbMV1PAh7" crossorigin="anonymous"></script>
@@ -82,18 +32,21 @@
                <option value="defaultText" id="0">Custom Layouts</option>
                <option value="defaultLayout" id="1">Default</option>
             </select></li>
+            <li><div id="tools">
+               <span id="helperLbl" class="badge badge-info">??</span>
+               <button type="button" class="btn btn-dark" id="addLayout">+</button>
+               <button type="button" class="btn btn-dark" id="themeChanger"></button>
+            </div></li>
          </ul>
-         <span id="helperLbl" class="badge badge-info">??</span>
-         <button type="button" class="btn btn-dark" id="addLayout">+</button> <!--Allow the user to pick a custom weight <= 1000 and >= 0 -->
+
       </div>
       <div id="grid">
-         <canvas id="myCanvas" width="1760" height="960" oncontextmenu="return false;"></canvas>
+         <canvas id="myCanvas" width="3000" height="2000" oncontextmenu="return false;"></canvas>
 
       </div>
       <script>
          var canvas = document.getElementById("myCanvas");
          var context = canvas.getContext("2d");
-         // window.onload = makeLaunchDesign;
          window.onload = initializeTheGrid;
          canvas.onmousemove = drawBarriers;
          canvas.onmousedown = colorBarriers;
@@ -112,10 +65,12 @@
          var layoutPicker = document.getElementById("layouts");
          var addLayoutBtn = document.getElementById("addLayout");
          addLayoutBtn.onclick = addLayout;
-         var TILE_HEIGHT = 40;
-         var TILE_WIDTH = 40;
-         var NUM_ROWS = 49;
-         var NUM_COLS = 44;
+         var themeChangerBtn = document.getElementById("themeChanger");
+         themeChangerBtn.onclick = changeTheme;
+         var TILE_HEIGHT = 30;
+         var TILE_WIDTH = 30;
+         var NUM_ROWS = 66;
+         var NUM_COLS = 100;
          var START_COLOR = "#55d43f";
          var END_COLOR = "#ff0800";
          var PATH_COLOR = "#27aee3";
@@ -123,9 +78,12 @@
          var SHORTEST_PATH_COLOR = "#ef820d";
          var GRIDLINES_COLOR = "#d3d3d3";
          var ROW_OFFSET = 104;
-         var COL_OFFSET = 3;
+         var COL_OFFSET = 11;
          var DELAY = 500;
          var GRIDLINES_WIDTH = "1";
+         var TILE_COLOR = "#ffffff";
+         var TILE_BRIGHT_THEME_COLOR = "#ffffff";
+         var TILE_DARK_THEME_COLOR = "#36454f";
          var currentLayout = 0;
          var layouts = new Array();
          var layoutsStartAndEnd = new Array();
@@ -158,10 +116,9 @@
          //Preforms Search
          function breadthFirstSearch() {
             if (!pickedStart || !pickedEnd) {return;}
-            //Breath First Search Below
             var currentCoords = new Array();
             var found = false;
-            currentCoords.push(new Array(startRow, startCol)); // This should be new Array(startRow, startCol)
+            currentCoords.push(new Array(startRow, startCol)); 
             if (startRow == endRow && startCol == endCol) {found = true;}
             var currentDistance = 1;
             var computationsCounted = 0;
@@ -343,13 +300,13 @@
          }
          //Resets the board
          function erasePath() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            // context.clearRect(0, 0, canvas.width, canvas.height);
             for (var i = 0; i < NUM_ROWS; i++) {
                for (var j = 0; j < NUM_COLS; j++) {
                   visitedTile[i][j] = false;
                   distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
                   isPath[i][j] = false;
-                  isBarrier[i][j] = true;
+                  isBarrier[i][j] = false;
                }
             }
             document.getElementById("pathComboBox").value = "default";
@@ -363,13 +320,14 @@
          }
          //Colors a box
          function colorBox(row, col, color) {
+            context.fillStyle = color;
+            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
             context.beginPath();
             context.lineWidth = GRIDLINES_WIDTH;
-            context.fillStyle = color;
-            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
             context.strokeStyle = GRIDLINES_COLOR;
+            context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
             context.stroke();
-            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+
          }
          //Draws Barriers
          function drawBarriers() {
@@ -389,6 +347,8 @@
                visitedTile[row][col] = true;
                isBarrier[row][col] = true;
             } else {
+               context.fillStyle = TILE_COLOR;
+               context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.beginPath();
                context.lineWidth = GRIDLINES_WIDTH;
@@ -431,10 +391,12 @@
          function makeGrid() {
             for (var i = 0; i < NUM_ROWS; i++) {
                for (var j = 0; j < NUM_COLS; j++) {
+                  context.fillStyle = TILE_COLOR;
+                  context.fillRect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                   context.beginPath();
                   context.lineWidth = GRIDLINES_WIDTH;
-                  context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                   context.strokeStyle = GRIDLINES_COLOR;
+                  context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                   context.stroke();
                }
             }
@@ -456,6 +418,7 @@
             if (row == endRow && col == endCol) {return;}
             visitedTile[startRow][startCol] = false;
             visitedTile[row][col] = true;
+            isBarrier[row][col] = false;
             redraw(startRow, startCol);
             colorBox(row, col, START_COLOR);
             startRow = row;
@@ -464,13 +427,15 @@
          function replaceEnd(row, col) {
             if (row == startRow && col == startCol) {return;}
             visitedTile[row][col] = false;
+            isBarrier[row][col] = false;
             redraw(endRow, endCol);
             colorBox(row, col, END_COLOR);
             endRow = row;
             endCol = col;
          }
          function redraw(row, col) {
-            context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+            context.fillStyle = TILE_COLOR;
+            context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
             context.beginPath();
             context.lineWidth = GRIDLINES_WIDTH;
             context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
@@ -482,12 +447,12 @@
             makeGrid();
             if (selectedLayout == "defaultText" || selectedLayout == "defaultLayout") {
                pickedStart = true;
-               startRow = 10;
-               startCol = 15;
+               startRow = 14;
+               startCol = 20;
                pickedEnd = true;
                visitedTile[startRow][startCol] = true;
-               endRow = 10;
-               endCol = 29;
+               endRow = 14;
+               endCol = 38;
                colorBox(startRow, startCol, START_COLOR);
                colorBox(endRow, endCol, END_COLOR);
             } else {
@@ -523,12 +488,14 @@
                      isPath[i][j] = false;
                      visitedTile[i][j] = false;
                      distanceFromStart[i][j] = (TILE_WIDTH + TILE_HEIGHT) +1;
-                     context.clearRect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                     context.fillStyle = TILE_COLOR;
+                     context.fillRect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                      context.beginPath();
                      context.lineWidth = GRIDLINES_WIDTH;
                      context.rect(j*TILE_WIDTH, i*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                      context.strokeStyle = GRIDLINES_COLOR;
                      context.stroke();
+
                   }
                }
             }
@@ -536,7 +503,7 @@
             computationsLbl.textContent = "0";
          }
          function helpUser() {
-            alert("Green Node: Start \nRed Node: End \nFind a Path!: Finds the path between two nodes\nRestart: Double click to clear barriers and paths, single to clear paths \nPick an Algorithm!: An array of pathfinding algorithms \nDraw Barriers: Drag left click \nDelete Barriers: Drag right click\nMove Nodes: Drag and drop")
+            alert("Green Node: Start \nRed Node: End \nFind a Path!: Finds the path between two nodes\nRestart: Double click to clear barriers and paths, single to clear paths \nPick an Algorithm!: An array of pathfinding algorithms \nDraw Barriers: Drag left click \nDelete Barriers: Drag right click\nMove Nodes: Drag and drop\nCustom Layouts: A list of unique barrier layouts\n+: Click to save your layout as a custom layout\nBlank Square: Click to change the tile theme")
          }
          function makeLaunchDesign() {
             initializeTheGrid();
@@ -578,6 +545,8 @@
                }
             }
             if (unique) {
+               var layoutName = prompt("Name your new custom layout:", "Custom Layout #" + layouts.length);
+               if (layoutName == null) {return;}
                var newLayout = new Array();
                for (var i = 0; i < NUM_ROWS; i++) {
                   newLayout[i] = isBarrier[i].slice();
@@ -588,7 +557,6 @@
                layoutsStartAndEnd[layoutsStartAndEnd.length-1][1] = startCol;
                layoutsStartAndEnd[layoutsStartAndEnd.length-1][2] = endRow;
                layoutsStartAndEnd[layoutsStartAndEnd.length-1][3] = endCol;
-               var layoutName = prompt("Name your new custom layout:", "Custom Layout #" + layouts.length);
                var newOption = document.createElement("option");
                newOption.id = layouts.length + 1;
                newOption.value = layouts.length + 1;
@@ -596,7 +564,28 @@
                layoutPicker.add(newOption);
                layoutPicker.value = layouts.length + 1;
             } else {
-               alert("This layout has already been recorded")
+               alert("This layout has already been recorded");
+            }
+         }
+         function changeTheme() {
+            if (TILE_COLOR == TILE_DARK_THEME_COLOR) {
+               TILE_COLOR = TILE_BRIGHT_THEME_COLOR;
+               WALL_COLOR = TILE_DARK_THEME_COLOR;
+            } else {
+               TILE_COLOR = TILE_DARK_THEME_COLOR;
+               WALL_COLOR = TILE_BRIGHT_THEME_COLOR;
+            }
+            removePath();
+            themeChangerBtn.style.background = TILE_COLOR;
+            for (var i = 0; i < NUM_ROWS; i++) {
+               for (var j = 0; j < NUM_COLS; j++) {
+                  if ((i == startRow && j == startCol) || (i == endRow && j == endCol)) {continue;}
+                  if (isBarrier[i][j]) {
+                     colorBox(i, j, WALL_COLOR);
+                  } else {
+                     colorBox(i, j, TILE_COLOR);
+                  }
+               }
             }
          }
       </script>
