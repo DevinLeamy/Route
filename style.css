@@ -1,12 +1,20 @@
 /*Navigation bar and the like */
+html, body {
+   width: 3004px;
+   height: 2104px;
+   max-width: 3004px;
+   max-height: 2104px;
+   overflow-x: visible;
+   position: fixed;
+}
 #intro_header {
    text-align: left;
    font-family: monospace;
    font-size: 25px;
-
 }
 #container1 {
    margin-bottom: 75px;
+   width: 1804px;
 }
 button {
    text-align: justify;
@@ -16,6 +24,8 @@ button {
    color: white;
 }
 ul {
+   left: 70px;
+   position: absolute;
    margin-bottom: 100px;
    list-style-type: none;
    padding: 0;
@@ -48,28 +58,16 @@ ul li {
 #lengthBtn {
    pointer-events: none;
 }
-#helperLbl {
-   right: 10px;
-   position: absolute;
-   text-align: center;
-   margin-left: 400px;
-   margin-top: 10px;
-   font-size: 30px;
-   width: 50px;
-   height: 50px;
-   color: white;
-   border-radius: 5px;
-   background-color: #008080
-}
+
 #layouts {
    background-color: #4cbb17;
    color: white;
 }
 #addLayout {
-   right: 225px;
+   right: 105px;
    position: absolute;
    text-align: center;
-   margin-top: 10px;
+   /* margin-top: 10px; */
    font-size: 25px;
    width: 50px;
    height: 50px;
@@ -77,10 +75,41 @@ ul li {
    border-radius: 5px;
    background-color: #646464;
 }
+#helperLbl {
+   position: absolute;
+   right: -5.5%;
+   text-align: center;
+   /* margin-left: 400px; */
+   /* margin-top: 10px; */
+   font-size: 30px;
+   width: 50px;
+   height: 50px;
+   color: white;
+   border-radius: 5px;
+   background-color: #008080
+}
+#themeChanger {
+   right: 45px;
+   position: absolute;
+   text-align: center;
+   width: 50px;
+   height: 50px;
+   color: white;
+   border-color: #d3d3d3;
+   background-color: #ffffff;
+   color: black;
+}
+#tools {
+   margin-bottom: 50px;
+   margin-left: 70px;
 
-
+}
 
 /*Grid*/
 #grid {
    text-align: center;
+}
+#myCanvas {
+   left: 10px;
+   position: fixed
 }
