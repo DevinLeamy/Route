@@ -309,7 +309,6 @@
                   isBarrier[i][j] = false;
                }
             }
-            document.getElementById("pathComboBox").value = "default";
             initializeTheGrid();
             lengthLbl.textContent = "0";
             computationsLbl.textContent = "0";
@@ -402,6 +401,7 @@
             }
          }
          function handlePathChoice() {
+            removePath();
             var algorithm = document.getElementById("pathComboBox").value;
             if (algorithm == "breadthFirstSearch" || algorithm == "default") {
                document.getElementById("pathComboBox").value = "breadthFirstSearch";
