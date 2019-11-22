@@ -2,8 +2,9 @@
 html, body {
    /* width: 3004px;
    height: 2104px;
-   max-width: 3004px;
-   max-height: 2104px; */
+   */
+   min-width: 1200px;
+   min-height: 1000px;
    overflow-x: visible;
    /* position: fixed; */
 }
@@ -58,10 +59,14 @@ ul li {
 #computationsBtn {
    background-color: #966fd6;
    pointer-events: none;
+   font-size: 0.9vw;
+   width: 12%;
 }
 #lengthBtn {
    margin-left: 0.1%;
    pointer-events: none;
+   font-size: 0.9vw;
+   width: 12%;
    /* width: 20%; */
 }
 
@@ -104,7 +109,7 @@ ul li {
    border-color: #d3d3d3;
    background-color: #ffffff;
    color: black;
-   margin-right: 26%;
+   margin-right: 22%;
 }
 /* #tools {
    margin-bottom: 50px;
