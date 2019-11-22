@@ -18,27 +18,27 @@
          <h1 id="intro_header">The Ultimate Pathfinding Website</h1>
       </div>
       <div id="container1">
-         <ul id="nav_bar">
-            <li><button type="button" class="btn btn-info" id="lengthBtn">Length of the Path: <span class="badge" id="lengthLbl">0</span></button></li>
-            <li><button type="button" class="btn btn-dark" id="computationsBtn">Number of Operations: <span class="badge" id="computationsLbl">0</span></button></li>
-            <li><button id="refreshBtn" type="button" class="btn btn-warning">Restart</button></li>
-            <li><button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button> </li>
-            <li><select id="pathComboBox">
+         <!-- <ul id="nav_bar"> -->
+            <button type="button" class="btn btn-info" id="lengthBtn">Length of the Path: <span class="badge" id="lengthLbl">0</span></button>
+            <button type="button" class="btn btn-dark" id="computationsBtn">Number of Operations: <span class="badge" id="computationsLbl">0</span></button>
+            <button id="refreshBtn" type="button" class="btn btn-warning">Restart</button>
+            <button id="searchBtn" type="button" class="btn btn-danger">Find a Path!</button>
+            <select id="pathComboBox">
                <option value="default">Pick an Algorithm!</option>
                <option value="breadthFirstSearch">Breadth First Search</option>
                <option value="AStarSearch">A*</option>
-            </select></li>
-            <li><select id="layouts">
+            </select>
+            <select id="layouts">
                <option value="defaultText" id="0">Custom Layouts</option>
                <option value="defaultLayout" id="1">Default</option>
-            </select></li>
-            <li><div id="tools">
-               <span id="helperLbl" class="badge badge-info">??</span>
-               <button type="button" class="btn btn-dark" id="addLayout">+</button>
-               <button type="button" class="btn btn-dark" id="themeChanger"></button>
-            </div></li>
-         </ul>
+            </select>
+            <!-- <div id="tools"> -->
+            <button type="button" class="btn btn-dark" id="addLayout">+</button>
+            <button type="button" class="btn btn-dark" id="themeChanger"></button>
+            <button id="helperLbl" class="btn btn-dark" >??</button>
 
+            <!-- </div> -->
+         <!-- </ul> -->
       </div>
       <div id="grid">
          <canvas id="myCanvas" width="3000" height="2000" oncontextmenu="return false;"></canvas>
