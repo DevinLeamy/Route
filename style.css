@@ -110,6 +110,7 @@ ul li {
    background-color: #ffffff;
    color: black;
    margin-right: 22%;
+   transition: 0.5s ease;
 }
 /* #tools {
    margin-bottom: 50px;
