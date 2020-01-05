@@ -348,8 +348,8 @@
                isPath[row][col] = false;
             } else {
                context.fillStyle = TILE_COLOR;
-               context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.clearRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+               context.fillRect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
                context.beginPath();
                context.lineWidth = GRIDLINES_WIDTH;
                context.rect(col*TILE_WIDTH, row*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
